@@ -49,6 +49,7 @@ This resource requires the following dependencies to be installed on your FiveM 
 ### Installation Steps
 
 1. **Download the Resource**
+    
     Press on `code` and then `download zip`. Extact the script and put it in your scripts folder.
 
 2. **Verify Dependencies are Installed**
