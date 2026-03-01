@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>NDRP Jobcenter</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: transparent;
+            overflow: hidden;
+            user-select: none;
+            color: #e4e4e7;
+        }
+
+        #app {
+            display: none;
+            position: fixed;
+            inset: 0;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        #app.active {
+            display: flex;
+        }
+
+        /* ---- Panel ---- */
+        .panel {
+            width: 680px;
+            background: rgba(30, 30, 35, 0.97);
+            border: 1px solid #1e1e22;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: panelIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes panelIn {
+            from {
+                opacity: 0;
+                transform: scale(0.97) translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* ---- Header ---- */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 18px;
+            background: #1f1f24;
+            border-bottom: 1px solid #2a2a2f;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+        }
+
+        .header-icon-wrap {
+            width: 26px;
+            height: 26px;
+            border-radius: 5px;
+            background: rgba(59, 130, 246, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-icon {
+            font-size: 11px;
+            color: #3B82F6;
+        }
+
+        .header-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            color: #71717a;
+            text-transform: uppercase;
+        }
+
+        .close-btn {
+            background: #222228;
+            border: 1px solid #2d2d33;
+            color: #52525b;
+            cursor: pointer;
+            font-size: 13px;
+            width: 24px;
+            height: 24px;
+            border-radius: 5px;
+            transition: all 0.12s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            color: #a1a1aa;
+            background: #2a2a30;
+        }
+
+        /* ---- Content ---- */
+        .content-area {
+            padding: 10px;
+            background: rgba(26, 26, 31, 0.95);
+        }
+
+        /* ---- Job grid ---- */
+        .job-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+
+        /* ---- Job card ---- */
+        .job-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            padding: 12px;
+            background: #1c1c22;
+            border: 1px solid #28282e;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease;
+            position: relative;
+            overflow: visible;
+            opacity: 0;
+            transform: translateY(6px);
+            animation: cardIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .job-card:hover {
+            background: #222228;
+            border-color: #303036;
+        }
+
+        .job-card.current-job {
+            border-color: rgba(59, 130, 246, 0.25);
+            background: rgba(59, 130, 246, 0.03);
+        }
+
+        /* Locked */
+        .job-card.locked {
+            opacity: 0.3;
+            cursor: default;
+        }
+
+        .job-card.locked:hover {
+            opacity: 0.4;
+        }
+
+        .job-card.locked .job-icon-wrap {
+            filter: grayscale(1);
+        }
+
+        /* Locked tooltip */
+        .locked-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(2px);
+            background: #222228;
+            border: 1px solid #2d2d33;
+            border-radius: 5px;
+            padding: 4px 9px;
+            font-size: 10px;
+            color: #a1a1aa;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s ease, transform 0.12s ease;
+            z-index: 10;
+        }
+
+        .job-card.locked:hover .locked-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-3px);
+        }
+
+        /* ---- Badges ---- */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 3px;
+            letter-spacing: 0.15px;
+            white-space: nowrap;
+            position: absolute;
+            top: 7px;
+            right: 7px;
+        }
+
+        .badge-current {
+            background: rgba(59, 130, 246, 0.10);
+            color: #60A5FA;
+        }
+
+        .badge-recommended {
+            background: rgba(245, 158, 11, 0.08);
+            color: #FBBF24;
+        }
+
+        .badge-locked {
+            background: rgba(255, 255, 255, 0.03);
+            color: #52525b;
+        }
+
+        .badge-locked i {
+            font-size: 7px;
+        }
+
+        /* ---- Icon ---- */
+        .job-icon-wrap {
+            width: 36px;
+            height: 36px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+
+        .job-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .job-name {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #e4e4e7;
+            margin-bottom: 1px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .job-desc {
+            font-size: 10.5px;
+            color: #52525b;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .job-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 5px;
+        }
+
+        .job-salary {
+            font-size: 10px;
+            font-weight: 600;
+            color: #22C55E;
+            padding: 1px 5px;
+            background: rgba(34, 197, 94, 0.05);
+            border-radius: 3px;
+            white-space: nowrap;
+        }
+
+        .job-active-count {
+            font-size: 9px;
+            color: #3f3f46;
+        }
+
+        /* ---- Footer ---- */
+        .panel-footer {
+            padding: 9px 18px 10px;
+            text-align: center;
+            background: rgba(26, 26, 31, 0.95);
+            border-top: 1px solid #252530;
+        }
+
+        .footer-text {
+            font-size: 10px;
+            color: #3f3f46;
+        }
+
+        .footer-level {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 5px;
+        }
+
+        .footer-level-badge {
+            font-size: 9px;
+            font-weight: 700;
+            color: #3B82F6;
+            background: rgba(59, 130, 246, 0.08);
+            padding: 2px 6px;
+            border-radius: 3px;
+            letter-spacing: 0.2px;
+        }
+
+        .footer-level-bar {
+            width: 80px;
+            height: 3px;
+            background: #222228;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .footer-level-fill {
+            height: 100%;
+            background: #3B82F6;
+            border-radius: 2px;
+            transition: width 0.4s ease;
+        }
+
+        .footer-level-text {
+            font-size: 8.5px;
+            color: #3f3f46;
+        }
+
+        .btn-confirm.disabled {
+            background: #222228;
+            border-color: #252529;
+            color: #52525b;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* ===================================================
+           VIEW TRANSITIONS
+           =================================================== */
+        #jobListView {
+            transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+
+        #jobListView.fade-out {
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .inner-view {
+            display: none;
+        }
+
+        .inner-view.active {
+            display: block;
+            animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideBack {
+            from {
+                opacity: 0;
+                transform: translateX(-12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #jobListView.slide-back {
+            animation: slideBack 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* ===================================================
+           TUTORIAL VIEW
+           =================================================== */
+        .tutorial-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #1a1a1e;
+            margin-bottom: 10px;
+        }
+
+        .tutorial-job-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            flex-shrink: 0;
+        }
+
+        .tutorial-job-info {
+            flex: 1;
+        }
+
+        .tutorial-job-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #e4e4e7;
+            margin-bottom: 1px;
+        }
+
+        .tutorial-job-desc {
+            font-size: 11px;
+            color: #52525b;
+        }
+
+        .tutorial-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .tutorial-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #1c1c22;
+            border: 1px solid #1e1e22;
+            border-radius: 6px;
+            opacity: 0;
+            transform: translateY(5px);
+            animation: stepIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes stepIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.08);
+            color: #3B82F6;
+            font-size: 10px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .step-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 11px;
+            color: #52525b;
+        }
+
+        .step-text {
+            font-size: 12px;
+            color: #a1a1aa;
+            flex: 1;
+        }
+
+        /* ---- Tutorial footer ---- */
+        .tutorial-footer {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px 10px;
+            background: rgba(26, 26, 31, 0.95);
+            border-top: 1px solid #252530;
+        }
+
+        .btn-back {
+            padding: 7px 14px;
+            background: #222228;
+            border: 1px solid #252529;
+            border-radius: 5px;
+            color: #71717a;
+            font-family: 'Inter', sans-serif;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+
+        .btn-back:hover {
+            background: #2a2a30;
+            color: #a1a1aa;
+        }
+
+        .btn-confirm {
+            flex: 1;
+            padding: 7px 14px;
+            background: #3B82F6;
+            border: 1px solid #2563EB;
+            border-radius: 5px;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+
+        .btn-confirm:hover {
+            background: #2563EB;
+        }
+
+        .btn-confirm:active {
+            transform: scale(0.98);
+        }
+
+        /* ===================================================
+           CONFIRM MODAL
+           =================================================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            animation: modalBgIn 0.15s ease forwards;
+        }
+
+        @keyframes modalBgIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-box {
+            width: 340px;
+            background: #1f1f24;
+            border: 1px solid #222226;
+            border-radius: 8px;
+            overflow: hidden;
+            animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-body {
+            padding: 20px 20px 16px;
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(245, 158, 11, 0.08);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #F59E0B;
+            margin-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #e4e4e7;
+            margin-bottom: 4px;
+        }
+
+        .modal-desc {
+            font-size: 11px;
+            color: #71717a;
+            line-height: 1.4;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 6px;
+            padding: 0 16px 14px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 7px 12px;
+            border-radius: 5px;
+            font-family: 'Inter', sans-serif;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #222228;
+            border: 1px solid #252529;
+            color: #71717a;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #2a2a30;
+            color: #a1a1aa;
+        }
+
+        .modal-btn-confirm {
+            background: #3B82F6;
+            border: 1px solid #2563EB;
+            color: #fff;
+        }
+
+        .modal-btn-confirm:hover {
+            background: #2563EB;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="panel">
+            <div class="panel-header">
+                <div class="header-left">
+                    <div class="header-icon-wrap">
+                        <i class="fas fa-briefcase header-icon"></i>
+                    </div>
+                    <span class="header-title" id="headerTitle">Job Center</span>
+                </div>
+                <button class="close-btn" id="closeBtn">&times;</button>
+            </div>
+
+            <!-- JOB LIST VIEW -->
+            <div id="jobListView">
+                <div class="content-area">
+                    <div class="job-grid" id="jobGrid"></div>
+                </div>
+                <div class="panel-footer">
+                    <div class="footer-text">Select a job to start working</div>
+                    <div class="footer-level" id="footerLevel">
+                        <span class="footer-level-badge" id="levelBadge">Level 1</span>
+                        <div class="footer-level-bar">
+                            <div class="footer-level-fill" id="levelFill"></div>
+                        </div>
+                        <span class="footer-level-text" id="levelText">0/60 min</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TUTORIAL VIEW -->
+            <div id="tutorialView" class="inner-view">
+                <div class="content-area">
+                    <div class="tutorial-header" id="tutorialHeader"></div>
+                    <div class="tutorial-steps" id="tutorialSteps"></div>
+                </div>
+                <div class="tutorial-footer">
+                    <button class="btn-back" id="btnBack">
+                        <i class="fas fa-arrow-left" style="margin-right:4px;font-size:9px"></i>Back
+                    </button>
+                    <button class="btn-confirm" id="btnConfirm">Start Working</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <div class="modal-body">
+                <div class="modal-icon"><i class="fas fa-exchange-alt"></i></div>
+                <div class="modal-title">Change Job?</div>
+                <div class="modal-desc" id="modalDesc">Are you sure you want to change from your current job?</div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn modal-btn-confirm" id="modalConfirm">Change Job</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var app = document.getElementById('app');
+            var jobGrid = document.getElementById('jobGrid');
+            var closeBtn = document.getElementById('closeBtn');
+            var headerTitle = document.getElementById('headerTitle');
+            var jobListView = document.getElementById('jobListView');
+            var tutorialView = document.getElementById('tutorialView');
+            var tutorialHeader = document.getElementById('tutorialHeader');
+            var tutorialSteps = document.getElementById('tutorialSteps');
+            var btnBack = document.getElementById('btnBack');
+            var btnConfirm = document.getElementById('btnConfirm');
+            var levelBadge = document.getElementById('levelBadge');
+            var levelFill = document.getElementById('levelFill');
+            var levelText = document.getElementById('levelText');
+
+            var confirmModal = document.getElementById('confirmModal');
+            var modalDesc = document.getElementById('modalDesc');
+            var modalCancel = document.getElementById('modalCancel');
+            var modalConfirm = document.getElementById('modalConfirm');
+
+            var allJobs = [];
+            var selectedJob = null;
+            var currentJob = 'unemployed';
+            var playerLevel = 1;
+
+            var colors = [
+                { bg: 'rgba(59, 130, 246, 0.07)', fg: '#3B82F6' },
+                { bg: 'rgba(168, 85, 247, 0.07)', fg: '#A855F7' },
+                { bg: 'rgba(245, 158, 11, 0.07)', fg: '#F59E0B' },
+                { bg: 'rgba(34, 197, 94, 0.07)', fg: '#22C55E' },
+                { bg: 'rgba(239, 68, 68, 0.07)', fg: '#EF4444' },
+                { bg: 'rgba(6, 182, 212, 0.07)', fg: '#06B6D4' },
+            ];
+
+            function show() { app.classList.add('active'); }
+            function hide() { app.classList.remove('active'); }
+
+            function hideAllViews() {
+                jobListView.style.display = 'none';
+                jobListView.classList.remove('fade-out', 'slide-back');
+                tutorialView.classList.remove('active');
+            }
+
+            function showJobList(animated) {
+                hideAllViews();
+                jobListView.style.display = 'block';
+                if (animated) jobListView.classList.add('slide-back');
+                headerTitle.textContent = 'Job Center';
+            }
+
+            function showTutorial() {
+                jobListView.classList.add('fade-out');
+                setTimeout(function () {
+                    jobListView.style.display = 'none';
+                    jobListView.classList.remove('fade-out');
+                    tutorialView.classList.add('active');
+                    headerTitle.textContent = 'Get Started';
+                }, 150);
+
+                // Update button state
+                if (selectedJob && selectedJob.id === currentJob) {
+                    btnConfirm.textContent = 'You already work here';
+                    btnConfirm.classList.add('disabled');
+                } else {
+                    btnConfirm.textContent = 'Start Working';
+                    btnConfirm.classList.remove('disabled');
+                }
+            }
+
+            function postNUI(endpoint, data) {
+                fetch('https://' + GetParentResourceName() + '/' + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data || {}),
+                });
+            }
+
+            // Modal
+            function showConfirmModal(jobName) {
+                modalDesc.textContent = 'Are you sure you want to change from ' + jobName + '?';
+                confirmModal.classList.add('active');
+            }
+
+            function hideConfirmModal() {
+                confirmModal.classList.remove('active');
+            }
+
+            function getCurrentJobName() {
+                for (var k = 0; k < allJobs.length; k++) {
+                    if (allJobs[k].id === currentJob) return allJobs[k].name;
+                }
+                return currentJob;
+            }
+
+            modalCancel.onclick = function () { hideConfirmModal(); };
+
+            modalConfirm.onclick = function () {
+                hideConfirmModal();
+                if (!selectedJob) return;
+                hide();
+                postNUI('confirmJob', { jobId: selectedJob.id });
+                selectedJob = null;
+                showJobList(false);
+            };
+
+            function renderTutorial(job, colorIdx) {
+                var c = colors[colorIdx % colors.length];
+
+                tutorialHeader.innerHTML = '';
+                var iw = document.createElement('div');
+                iw.className = 'tutorial-job-icon';
+                iw.style.background = c.bg;
+                var ic = document.createElement('i');
+                ic.className = job.icon || 'fas fa-briefcase';
+                ic.style.color = c.fg;
+                iw.appendChild(ic);
+
+                var info = document.createElement('div');
+                info.className = 'tutorial-job-info';
+                var nm = document.createElement('div');
+                nm.className = 'tutorial-job-name';
+                nm.textContent = job.name;
+                var ds = document.createElement('div');
+                ds.className = 'tutorial-job-desc';
+                ds.textContent = job.description;
+                info.appendChild(nm);
+                info.appendChild(ds);
+
+                tutorialHeader.appendChild(iw);
+                tutorialHeader.appendChild(info);
+
+                tutorialSteps.innerHTML = '';
+                var steps = job.tutorial || [];
+                for (var i = 0; i < steps.length; i++) {
+                    var st = steps[i];
+                    var row = document.createElement('div');
+                    row.className = 'tutorial-step';
+                    row.style.animationDelay = (i * 40 + 60) + 'ms';
+
+                    var num = document.createElement('div');
+                    num.className = 'step-number';
+                    num.textContent = (i + 1);
+
+                    var si = document.createElement('div');
+                    si.className = 'step-icon';
+                    var sic = document.createElement('i');
+                    sic.className = st.icon || 'fas fa-circle';
+                    si.appendChild(sic);
+
+                    var tx = document.createElement('div');
+                    tx.className = 'step-text';
+                    tx.textContent = st.text || '';
+
+                    row.appendChild(num);
+                    row.appendChild(si);
+                    row.appendChild(tx);
+                    tutorialSteps.appendChild(row);
+                }
+            }
+
+            function renderJobs(jobs) {
+                jobGrid.innerHTML = '';
+                allJobs = jobs;
+
+                for (var i = 0; i < jobs.length; i++) {
+                    (function (job, idx) {
+                        var c = colors[idx % colors.length];
+                        var isCurrent = (job.id === currentJob);
+                        var isLocked = (job.requiredLevel || 1) > playerLevel;
+
+                        var card = document.createElement('div');
+                        card.className = 'job-card';
+                        if (isCurrent) card.classList.add('current-job');
+                        if (isLocked) card.classList.add('locked');
+                        card.style.animationDelay = (idx * 35 + 40) + 'ms';
+
+                        // Badge
+                        if (isLocked) {
+                            var b = document.createElement('div');
+                            b.className = 'badge badge-locked';
+                            b.innerHTML = '<i class="fas fa-lock"></i> Nivå ' + job.requiredLevel;
+                            card.appendChild(b);
+
+                            var tip = document.createElement('div');
+                            tip.className = 'locked-tooltip';
+                            tip.textContent = 'Kräver Nivå ' + job.requiredLevel + ' (du är Nivå ' + playerLevel + ')';
+                            card.appendChild(tip);
+                        } else if (isCurrent) {
+                            var b = document.createElement('div');
+                            b.className = 'badge badge-current';
+                            b.textContent = 'Ditt jobb';
+                            card.appendChild(b);
+                        } else if (job.recommended) {
+                            var b = document.createElement('div');
+                            b.className = 'badge badge-recommended';
+                            b.innerHTML = '<i class="fas fa-star" style="font-size:7px"></i> Rekommenderat';
+                            card.appendChild(b);
+                        }
+
+                        var iconWrap = document.createElement('div');
+                        iconWrap.className = 'job-icon-wrap';
+                        iconWrap.style.background = c.bg;
+                        var icon = document.createElement('i');
+                        icon.className = job.icon || 'fas fa-briefcase';
+                        icon.style.color = c.fg;
+                        iconWrap.appendChild(icon);
+
+                        var info = document.createElement('div');
+                        info.className = 'job-info';
+
+                        var name = document.createElement('div');
+                        name.className = 'job-name';
+                        name.textContent = job.name || 'Jobb';
+
+                        var desc = document.createElement('div');
+                        desc.className = 'job-desc';
+                        desc.textContent = job.description || '';
+
+                        var meta = document.createElement('div');
+                        meta.className = 'job-meta';
+                        var salary = document.createElement('div');
+                        salary.className = 'job-salary';
+                        salary.textContent = job.salary || '';
+                        meta.appendChild(salary);
+
+                        if (job.activeCount > 0) {
+                            var ac = document.createElement('span');
+                            ac.className = 'job-active-count';
+                            ac.textContent = job.activeCount + ' aktiva';
+                            meta.appendChild(ac);
+                        }
+
+                        info.appendChild(name);
+                        info.appendChild(desc);
+                        info.appendChild(meta);
+                        card.appendChild(iconWrap);
+                        card.appendChild(info);
+
+                        if (!isLocked) {
+                            card.onclick = function () {
+                                selectedJob = job;
+                                renderTutorial(job, idx);
+                                showTutorial();
+                                postNUI('selectJob', { jobId: job.id });
+                            };
+                        }
+
+                        jobGrid.appendChild(card);
+                    })(jobs[i], i);
+                }
+            }
+
+            btnBack.onclick = function () {
+                selectedJob = null;
+                btnConfirm.textContent = 'Börja arbeta';
+                btnConfirm.classList.remove('disabled');
+                showJobList(true);
+            };
+
+            btnConfirm.onclick = function () {
+                if (!selectedJob) return;
+
+                // If player already has a job and is switching, show modal
+                if (currentJob !== 'unemployed' && selectedJob.id !== currentJob) {
+                    showConfirmModal(getCurrentJobName());
+                    return;
+                }
+
+                hide();
+                postNUI('confirmJob', { jobId: selectedJob.id });
+                selectedJob = null;
+                showJobList(false);
+            };
+
+            window.addEventListener('message', function (event) {
+                var d = event.data;
+                if (d.action === 'showJobMenu') {
+                    currentJob = d.currentJob || 'unemployed';
+                    playerLevel = d.level || 1;
+
+                    // Update level display
+                    levelBadge.textContent = 'Nivå ' + playerLevel;
+                    var mpl = d.minutesPerLevel || 60;
+                    var mil = d.minutesIntoLevel || 0;
+                    var pct = Math.round((mil / mpl) * 100);
+                    levelFill.style.width = pct + '%';
+                    levelText.textContent = mil + '/' + mpl + ' min';
+
+                    renderJobs(d.jobs || []);
+                    showJobList(false);
+                    show();
+                } else if (d.action === 'hideJobMenu') {
+                    hide();
+                    hideConfirmModal();
+                    selectedJob = null;
+                    showJobList(false);
+                }
+            });
+
+            closeBtn.onclick = function () {
+                hide();
+                hideConfirmModal();
+                selectedJob = null;
+                showJobList(false);
+                postNUI('closeMenu');
+            };
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    if (confirmModal.classList.contains('active')) {
+                        hideConfirmModal();
+                        return;
+                    }
+                    if (tutorialView.classList.contains('active')) {
+                        selectedJob = null;
+                        showJobList(true);
+                        return;
+                    }
+                    hide();
+                    selectedJob = null;
+                    showJobList(false);
+                    postNUI('closeMenu');
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>
