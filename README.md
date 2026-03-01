@@ -49,10 +49,7 @@ This resource requires the following dependencies to be installed on your FiveM 
 ### Installation Steps
 
 1. **Download the Resource**
-   ```bash
-   cd resources
-   git clone https://github.com/yourusername/ndrp_jobcenter.git
-   ```
+    Press on `code` and then `download zip`. Extact the script and put it in your scripts folder.
 
 2. **Verify Dependencies are Installed**
    Ensure these are in your `resources` folder:
