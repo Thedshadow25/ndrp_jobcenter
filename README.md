@@ -67,15 +67,8 @@ This resource requires the following dependencies to be installed on your FiveM 
    ```
 
 4. **Start/Restart Server**
-   ```
-   restart ndrp_jobcenter
-   ```
-   Or restart your entire server to load all resources.
 
-5. **Verify Installation**
-   - Check server console for any errors related to `ndrp_jobcenter`
-   - Approach the Job Center NPC (located at `vector4(-262.38, -963.38, 30.22, 159.14)`)
-   - A blip labeled "Job Center" should appear on your map
+    Simply restart your server and enjoy the script!
 
 ## ⚙️ Configuration
 
@@ -136,8 +129,6 @@ Each job entry in `Config.Jobs` supports:
 
 ## 🎮 Usage
 
-### For Players
-
 1. **Visit the Job Center** - Navigate to the marked location on your map
 2. **Interact with NPC** - Use your target system (default: right-click) to interact
 3. **Open Menu** - The job selection menu will appear
@@ -145,39 +136,6 @@ Each job entry in `Config.Jobs` supports:
 5. **Check Progress** - View your current level and work time progress
 6. **Complete Work** - Work in your assigned job to earn experience
 7. **Level Up** - Automatically receive notifications when you level up
-
-### For Administrators
-
-**Checking Player Job Data:**
-```lua
--- In console or through a debug script
-local player = exports.qbx_core:GetPlayer(source)
-local workMinutes = player.PlayerData.metadata.jc_workminutes or 0
-local level = math.floor(workMinutes / 60) + 1
-```
-
-**Resetting Player Progress:**
-```lua
-player.Functions.SetMetaData('jc_workminutes', 0)
-```
-
-## 📈 Job System
-
-### Current Available Jobs
-
-#### 1. Electrician
-- **Description**: Install and maintain electrical systems in buildings
-- **Salary**: $1,000/hour
-- **Required Level**: 1 (starter job)
-- **Location**: Vector3(152.16, -3210.88, 5.91)
-- **Recommended**: Yes
-
-#### 2. Garbage Collector
-- **Description**: Collect garbage and manage waste recycling
-- **Salary**: $1,000/hour  
-- **Required Level**: 1 (starter job)
-- **Location**: Vector3(152.16, -3210.88, 5.91)
-- **Recommended**: Yes
 
 ## 📊 Level Progression
 
@@ -264,11 +222,9 @@ This project was created by **thedshadow**. Keep credited when using or modifyin
 ## 🤝 Support
 
 For issues, suggestions, or modifications needed:
-1. Check the configuration file for customization options
-2. Ensure all dependencies are properly installed
-3. Check server console for error messages
-4. Verify player is using ox_target correctly
+Message me @thedshadow on discord, i don't have a store but i'll provide support
+for users in my dm's.
 
 ## 📌 Version History
 
-- **v1.0.0** (Current) - Initial release with Electrician and Garbage Collector jobs, complete level progression system
+- **v1.0.0** (Current) - Basic version
