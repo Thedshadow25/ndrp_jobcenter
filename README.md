@@ -1,4 +1,4 @@
-# NDRP Job Center
+# ndrp_jobcenter
 
 A comprehensive job center system for FiveM roleplay servers featuring a skill progression system, NUI-based job selection, and automatic level advancement.
 
